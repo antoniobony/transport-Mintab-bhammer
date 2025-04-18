@@ -1,0 +1,15 @@
+@keyframes fadeIn {
+    0% {
+      transform:scale(0.9);
+      opacity: 0; /* Ajouté pour une transition plus naturelle */
+    }
+    100% {
+      transform: scale(1,1);
+      opacity: 1; /* Ajouté pour une transition plus naturelle */
+    }
+  }
+  
+  .fadeIn {
+    animation: fadeIn 0.2s ease-in-out; /* Animation de 0.5 secondes */
+  }
+  
