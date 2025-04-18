@@ -42,17 +42,3 @@ export const ToastNotification = ({ title, message }:{title:string,message:strin
     </div>
   );
 };
-
-export default function Home() {
-  // Example notification data (this could come from an API or props)
-  const notification = {
-    title: 'Success',
-    message: 'Your action was completed successfully!',
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <ToastNotification title={notification.title} message={notification.message} />
-    </div>
-  );
-}
