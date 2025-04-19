@@ -9,7 +9,6 @@ import { BarContext } from "../(context)/barContext"
 import { cleanRowCol, findBhammer, Min } from "../(bhammer)/bhammer"
 import Image from "next/image"
 import { TypewriterEffect } from "../(component)/ui/typeWiritterEffect"
-import { Verification } from "next/dist/lib/metadata/types/metadata-types"
 import { NotfiContext } from "../(context)/notif"
 
 
@@ -197,6 +196,7 @@ export default function Ro(){
                  const max = findDiffMax(arbre);
                  const sommetDebutDesignation:string[] = arbre.filter(v=>v.arc == max ).map((value)=>value.sommetDebut.designation);
                  degenerateCase(arbre,verification,dataResult,max,sommetDebutDesignation); 
+                 
                 }
             
     };
@@ -349,75 +349,68 @@ export default function Ro(){
                 // Check recursion limit
                 let isDegenerate = false;
                 const oldArbre = updateArbre 
-                for(const q of oldArbre){
-                    const degenerateSommet = q.sommetDebut.designation;
-                    const degenerateSommetFin = q.sommetFin.designation;
+    
+                    for(const q of updateArbre){
+                        const degenerateSommet = q.sommetDebut.designation;
+                        const degenerateSommetFin = q.sommetFin.designation;
+                        const degenerateSommet1 = updateArbre.find(a =>  a.sommetFin.designation === degenerateSommetFin && 
+                            a.sommetDebut.designation !== degenerateSommet && a.sommetDebut.value !== undefined 
+                            && a.arc !== max
+                        )?.sommetDebut.designation;
 
-                     isDegenerate = (
-                        (updateArbre.filter(a => a.sommetDebut.designation === degenerateSommet).length <= 1 &&
-                         !updateArbre.some(e => e.sommetDebut.designation !== degenerateSommet && 
-                            e.sommetFin.designation === q.sommetFin.designation && 
-                            e.sommetFin.value !== undefined)) ||
-                        (updateArbre.filter(a => a.sommetFin.designation === q.sommetFin.designation).length <= 1 &&
-                         !updateArbre.some(e => e.sommetFin.designation !== q.sommetFin.designation && 
-                            e.sommetDebut.designation === degenerateSommet && 
-                            e.sommetFin.value !== undefined))
-                    );
-        
-                    if (isDegenerate) {
-                        dispatcH({title:"Cas dégénérer"})
+                        const degenerateSommetFin1 = updateArbre.find(a =>  a.sommetFin.designation !== degenerateSommetFin && 
+                            a.sommetDebut.designation === degenerateSommet && 
+                            a.sommetFin.value !== undefined )?.sommetFin.designation;
+    
+                         isDegenerate = (
+                            (updateArbre.filter(a => a.sommetDebut.designation === degenerateSommet).length <= 1 &&
+                           
+                            (
+                                !updateArbre.some(e => e.sommetDebut.designation !== degenerateSommet && 
+                                    e.sommetFin.designation === degenerateSommetFin && 
+                                    e.sommetFin.value !== undefined)
+                                ||
+                                updateArbre.filter(e => e.sommetDebut.designation == degenerateSommet1 && e.sommetFin.designation !== degenerateSommetFin).length <=1
+                            ) 
+                            
+                            ) 
+                                ||
+                            (updateArbre.filter(a => a.sommetFin.designation === degenerateSommetFin).length <= 1 &&
+                                (
+                                !updateArbre.some(e => e.sommetFin.designation !== degenerateSommetFin && 
+                                    e.sommetDebut.designation === degenerateSommet && 
+                                    e.sommetFin.value !== undefined)
+                                ||
+                                updateArbre.filter(e => e.sommetDebut.designation !== degenerateSommet && e.sommetFin.designation === degenerateSommetFin1).length <=1 
+                                )
+                            )
+                             
+                        );
                         
-                        for(let i=0; i<updateArbre.length; i++){
-                            updateArbre[i] = {
-                                arc: updateArbre[i].arc,
-                                sommetDebut:{ designation: updateArbre[i].sommetDebut.designation, value: -Infinity },
-                                sommetFin:{ designation: updateArbre[i].sommetFin.designation, value: -Infinity },
+                        if (isDegenerate && verification.filter(d=>d.condition === "minTab").length < resultContext.length+dispoContext.length-1) {
+                            dispatcH({title:"Cas dégénérer"})
+                            
+                            for(let i=0; i<updateArbre.length; i++){
+                                updateArbre[i] = {
+                                    arc: updateArbre[i].arc,
+                                    sommetDebut:{ designation: updateArbre[i].sommetDebut.designation, value: -Infinity },
+                                    sommetFin:{ designation: updateArbre[i].sommetFin.designation, value: -Infinity },
+                                }
                             }
-                        }
-                            
-
-                        let rowIndex = alphabet.findIndex(item => item === degenerateSommet);
-                    
-                        let col = parseInt(degenerateSommetFin);
-        
-                        if (col !== undefined) {
-                            const colIndex = col - 1;
-                             verification = newDataResult( rowIndex == resultContext.length - 1? rowIndex -1:rowIndex+1,colIndex,updateArbre,verification,dataResult);
-                            
-                            if(verification.filter(a=>a.condition === "minTab").length < resultContext.length+dispoContext.length-1){
-                                const debutSommet = updateArbre.find(item=>item.arc == max)?.sommetDebut.designation;
-                                let isDegenerateCase = true;
-                                let col                         
-                                const x = updateArbre.filter(item=>item.sommetDebut.designation === debutSommet);
                                 
-                                for( const i of x){
-                                    isDegenerateCase =  updateArbre.some(e => e.sommetDebut.designation !== debutSommet && 
-                                        e.sommetFin.designation === i.sommetFin.designation);
-                                        
-                                        if(!isDegenerateCase){
-                                            break;
-                                        }
-                                }
-                
-
-                                if(!isDegenerateCase){
-                                    col = updateArbre.find(item => item.sommetDebut.designation === alphabet[rowIndex+1])?.sommetFin.designation as string;
-                                    rowIndex = alphabet.findIndex(item => item === debutSommet)
-                                    const colIndex = parseInt(col)-1;
-                                    verification = newDataResult(rowIndex,colIndex,updateArbre,verification,dataResult);                
-                                }
+                            let rowIndex = alphabet.findIndex(item => item === degenerateSommet);
+                            let col = parseInt(degenerateSommetFin);
+            
+                            if (col !== undefined) {
+                                const colIndex = col - 1;
+                                 verification = newDataResult( rowIndex == resultContext.length - 1? rowIndex -1:rowIndex+1,colIndex,updateArbre,verification,dataResult);
+                                 isDegenerate = false
                             }
-                            
-                            addSommetValue(sommetDebutDesignation,updateArbre,max,verification,dataResult);
-                            break;
-                        }
                     }
                 }
-
-                if(!isDegenerate){
-                    addSommetValue(sommetDebutDesignation,updateArbre,max,verification,dataResult);
-                }
-
+         
+                addSommetValue(sommetDebutDesignation,updateArbre,max,verification,dataResult);
+ 
             } catch (error) {
     
                 if (error instanceof RangeError) {

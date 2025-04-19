@@ -12,11 +12,12 @@ type Props= {
     accept?:string,
     required?:true,
     value?:string,
+    min?:number,
 }
 
 type Ref = HTMLInputElement;
 
-const Field = React.forwardRef<Ref, Props>(({name,max,onChange,type,defaultValue,required,hidden,value,placeholder,className}:Props,ref)=>(
+const Field = React.forwardRef<Ref, Props>(({name,max,onChange,type,defaultValue,required,hidden,value,placeholder,className,min}:Props,ref)=>(
     
     <input
         className={className}
@@ -30,6 +31,7 @@ const Field = React.forwardRef<Ref, Props>(({name,max,onChange,type,defaultValue
         required={required}
         ref={ref}
         defaultValue={defaultValue}
+        min={min}
       />
 )
 )

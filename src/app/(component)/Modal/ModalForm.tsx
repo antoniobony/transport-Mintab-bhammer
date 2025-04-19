@@ -6,10 +6,15 @@ import { Select } from "../Select/Select";
 import { NotfiContext } from "@/app/(context)/notif";
 
 
+
 export default function ModalForm(){
     const [open,setOpen] = useState<boolean>(false);
-    const [numberInput,setNumberInput] = useState<number>(28);
     const [name,setName] = useState<string>("Mintab");
+    const [quantite,setQuantite] = useState({
+        dispo:5,
+        result:5
+    })
+    const [numberInput,setNumberInput] = useState<number>((quantite.dispo*quantite.result)+quantite.dispo);
 
     const [dataTab,setDataTab] = useState<DataState>({
         data: [],
@@ -18,55 +23,68 @@ export default function ModalForm(){
         type:""
     })
 
-    const {data,result,available,dispatch} = useContext(DataContext);
-    const {notifTitle,message,dispatchNotif} = useContext(NotfiContext);
+    const {dispatch} = useContext(DataContext);
+    const {dispatchNotif} = useContext(NotfiContext);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    
+    const handleSetQuantite = (e:React.ChangeEvent<HTMLInputElement>)=>{
+        e.preventDefault();
+
         const { name, value } = e.target;
         const numValue = Number(value);
 
-        if (name.startsWith("field-result-")) {
-            const index = parseInt(name.split("-")[2]);
-            setDataTab(prev => ({
-                ...prev,
-                result: prev.result.map((val, i) => 
-                    i === index ? numValue : val
-                ).slice(0, (numberInput-4)/4)
-            }));
+        setQuantite({
+            dispo:name ==="dispo" ? numValue: quantite.dispo,
+            result:name === "result" ? numValue: quantite.result 
+        })
+        
+
+    }
     
+    
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        const numValue = Number(value);
+      
+        if (name.startsWith("field-result-")) {
+          const index = parseInt(name.split("-")[2]);
+          setDataTab((prev) => ({
+            ...prev,
+            result: prev.result.map((val, i) => (i === index ? numValue : val)).slice(0, quantite.result),
+          }));
         } else if (name.startsWith("field-dispo-")) {
-            
-            const index = parseInt(name.split("-")[2]);
-            setDataTab(prev => ({
-                ...prev,
-                available: prev.available.map((val, i) => 
-                    i === index ? numValue : val
-                ).slice(0, (numberInput-4)/4)
-            }));
+          const index = parseInt(name.split("-")[2]);
+          console.log("dispo", dataTab.available.length, "result", dataTab.result.length);
+          setDataTab((prev) => ({
+            ...prev,
+            available: prev.available
+              .map((val, i) => (i === index ? numValue : val))
+              .slice(0, quantite.dispo),
+          }));
         } else {
-            const index = parseInt(name.replace("field", ""));
-            const row = Math.floor(index / (numberInput/4));
-            const col = index % (numberInput/4);
-            
-            setDataTab(prev => ({
-                ...prev,
-                data: prev.data.map((rowArr, i) => 
-                    i === row 
-                        ? rowArr.map((val, j) => j === col ? numValue : val)
-                        : rowArr
-                )
-            }));
+          const index = parseInt(name.replace("field", ""));
+          const row = Math.floor(index / quantite.result); 
+          const col = index % quantite.result; 
+          console.log( row, col);
+          setDataTab((prev) => ({
+            ...prev,
+            data: prev.data.map((rowArr, i) =>
+              i === row ? rowArr.map((val, j) => (j === col ? numValue : val)) : rowArr
+            ),
+          }));
         }
-    };
+      };
+
 
     const handleSubmit = (e: FormEvent) => {
-
+        console.log(dataTab.data)
         e.preventDefault();
 
         const sommeAvailable:number = dataTab.available.reduce((a,b)=>a+b,0);
         const sommeResult:number = dataTab.result.reduce((a,b)=> a+b,0);
-        
-        if(sommeResult == sommeAvailable){
+        console.log(sommeAvailable,sommeResult)
+
+        if(sommeResult == sommeAvailable && sommeResult !== 0){
             dispatch({
                 payload: {
                     data: dataTab.data,
@@ -76,105 +94,147 @@ export default function ModalForm(){
                 }
             });
             setDataTab({
-                data: initializeData(),
-                result: Array((numberInput-4)/4).fill(0),
-                available: Array(4).fill(0),
+                data: Array.from({length:quantite.dispo},()=>Array(quantite.result).fill(0)),
+                result: Array(quantite.result).fill(0),
+                available: Array(quantite.dispo).fill(0),
                 type:name
             });
         
             setOpen(false); 
         }
         else{
+        
             dispatchNotif({
                 payload: {
                     title: "Erreur",
-                    message: "La somme des quantité demandes devrais etre égal à la somme des quantité disponible"
+                    message: "La somme des quantités demandes devrais etre égal à la somme des quantités disponible"
                 }
             });
         }
  
     }
 
-    const initializeData = () => {
-        const rows = 4;
-        const cols = (numberInput / 4)-1;
-        return Array.from({length:rows},()=>Array(cols).fill(0));
-    };
+
 
     useEffect(() => {
         setDataTab({
-            data: initializeData(),
-            result: Array((numberInput-4)/4).fill(0),
-            available: Array(4).fill(0),
+            data: Array.from({length:quantite.dispo},()=>Array(quantite.result).fill(0)),
+            result: Array(quantite.result).fill(0),
+            available: Array(quantite.dispo).fill(0),
             type:name
         });
-    }, [numberInput]);
+    }, [quantite]);
 
     return (
         <>
             <MyModal name="MINTAB BHAMMER" isOpen={open} onClose={()=>setOpen(false)} handleOpen={()=>setOpen(true)}>
-                    <div className="flex flex-row justify-center mt-3 mb-5">
-                            <button className={`" relative ${numberInput == 28 ?"bg-[#043679] " :"bg-[#1063cf]"}   cursor-pointer text-white p-1 rounded-l-md w-20 "`} onClick={()=>setNumberInput(28)}>
-                                <p>4x6</p>
-                                <div className={`" ${numberInput == 28 ?"bg-amber-200 w-[5px] h-[5px] " :"w-0 h-0"} absolute top-1 left-1 transition-all duration-150 ease-in-out  rounded-full mx-auto "`}/>
-                            </button>
-                            <button className={`" relative ${numberInput == 24 ?"bg-[#043679] " :"bg-[#1063cf]"}   cursor-pointer text-white p-1 rounded-r-md w-20 "`} onClick={()=>setNumberInput(24)}>
-                                <p>4x5</p>
-                                <div className={`" ${numberInput == 24 ?"bg-amber-200 w-[5px] h-[5px] " :"w-0 h-0"} absolute top-1 right-1 transition-all duration-150 ease-in-out  rounded-full mx-auto "`}/>
-                            </button>
-                    </div>
-                    <form action="" onSubmit={handleSubmit}>
-                        <div className ={`${numberInput == 24 ? "grid grid-cols-6":"grid grid-cols-7"} " space-x-2 "`}>
-                            {
-                                (()=>{
-                                    let number = []
-                                    for(let i=0;i+1 <= numberInput/4; i++ ){
-                                        number.push(<h1 key={i+1} className="mx-auto ">{i+1 <  numberInput/4 ? i+1 : ""}</h1>);
-                                    }
-                                    return number;
-                                })()
-                            }
-                            {
-                                (() => {
-                                    let elements = [];
-                                    let indexDispo = 0;
-                                    for(let i =0;i < numberInput;i++) {
-                                        elements.push(
+
+                        <form action="" onSubmit={handleSubmit}>
+                            <div className="flex flex-row">
+                            <ul className="mt-8 ">
+                                <li className="space-x-4">
+                                <label className="font-bold">Quantité démandé:</label>
+                                    <Field 
+                                        key="quantiteDemande"
+                                        onChange={handleSetQuantite}
+                                        className={`w-[70px]  rounded border border-[#1063cf] p-2 m-2* shadow-sm dark:border-dark-tertiary dark:text-white dark:focus:outline-none`}
+                                        name="result"
+                                        required
+                                        type="number"
+                                        min={2}
+                                        defaultValue={quantite.result}
+                                    />
+                                </li>
+                                <li className="mt-2">
+                                    <label className="font-bold">Quantité disponible:</label>
                                         <Field 
-                                            key={i}
-                                            onChange={handleChange}
-                                            className={`w-[50px] rounded border ${(i + 1) % (numberInput / 4) === 0 ? "border-red-400" : "border-[#1063cf]"} p-2 m-2 shadow-sm dark:border-dark-tertiary dark:text-white dark:focus:outline-none`}
-                                            name={`${(i + 1) % (numberInput / 4) === 0 ? `field-dispo-${Math.floor(i / (numberInput / 4))}` : `field${i}`}`}
+                                            key="quantiteDispo"
+                                            onChange={handleSetQuantite}
+                                            className={`w-[70px]  rounded border border-[#1063cf] p-2 m-2 shadow-sm dark:border-dark-tertiary dark:text-white dark:focus:outline-none`}
+                                            name="dispo"
                                             required
                                             type="number"
-                                        />);
-                                        
-                                        if((i+1)%(numberInput/4) == 0){
-                                            indexDispo++;
+                                            min={2}
+                                            defaultValue={quantite.dispo}
+                                        />
+                                </li>
+                            </ul>
+                            <div className="max-w-[462px] max-h-[372px] overflow-auto">
+                           
+                            <table className="overflow-y-auto  custom-scrollbar border-collapse border-b-0 border-gray-300">
+                                <tbody>
+                                    <tr>
+                                    {
+                                    (()=>{
+                                        let number = []
+                                        for(let i=0;i+1 <= quantite.result+1; i++ ){
+                                            number.push(<td key={i+1}><h1 key={i+1} className="px-7">{i+1 <  quantite.result+1 ? i+1 : ""}</h1></td>);
                                         }
+                                        return number;
+                                    })()
+                                    }        
+                                    </tr>
+                                    
+                                    {
+                                    Array.from({ length: quantite.dispo }).map((_, i) => (
+                                        <tr key={i}>
+                                        {
+                                            Array.from({ length: quantite.result }).map((_, j) => (
+                                            <td key={`${i}-${j}`}>
+                                                <Field 
+                                                onChange={handleChange}
+                                                className={`w-[50px] rounded border border-[#1063cf] p-2 m-2 shadow-sm dark:border-dark-tertiary dark:text-white dark:focus:outline-none`}
+                                                name={`field${i * quantite.result + j}`}
+                                                required
+                                                type="number"
+                                                min={1}
+                                                />          
+                                            </td>  
+                                            ))
+                                        }
+                                        <td>
+                                            <Field 
+                                                key={i}
+                                                onChange={handleChange}
+                                                className={`w-[50px] rounded border border-red-400  p-2 m-2 shadow-sm dark:border-dark-tertiary dark:text-white dark:focus:outline-none`}
+                                                name={`field-dispo-${i}`}
+                                                required
+                                                type="number"
+                                                min={1}
+                                            />
+                                        </td>
+                                        
+                                        </tr>
+                                    ))
                                     }
-                                    return elements;
-                                })()
-                            }
-                            {
-                                (() => {
-                                    let elements = [];
-                                    for(let i =0;i < (numberInput-4)/4;i++) {
-                                        elements.push(
-                                        <Field key={i} 
-                                        onChange={handleChange} 
-                                        className={`" w-[50px] rounded border border-red-400 p-2 m-2 shadow-sm dark:border-dark-tertiary dark:text-white dark:focus:outline-none" `}
-                                        name={"field-result-"+i} type="number" 
-                                        required
-                                        />);
-                                    }
-                                    return elements;
-                                })()
-                            }
-                        </div>
-                        <Select name={["Mintab","Bhammer"]} onClick={(name)=>{setName(name)}}/>
-                    </form>
-                                 
+                                    <tr>
+                                    {
+                                    (() => {
+                                        let elements = [];
+                                        for(let i =0;i < quantite.result;i++) {
+                                            elements.push(
+                                            <td key={i}>
+                                                <Field key={i} 
+                                                onChange={handleChange} 
+                                                className={`" w-[50px] rounded border border-red-400 p-2 m-2 shadow-sm dark:border-dark-tertiary dark:text-white dark:focus:outline-none" `}
+                                                name={"field-result-"+i} type="number" 
+                                                required
+                                                min={1}
+                                            />
+                                            </td>
+                                            );
+                                        }
+                                        return elements;
+                                    })()
+                                }        
+                                    </tr>   
+                                </tbody>
+                            </table>
+                            </div>
+                            </div>
+                            
+                            <Select  name={["Mintab","Bhammer"]} onClick={(name)=>{setName(name)}}/>
+                    </form>             
             </MyModal>
         </>
     )

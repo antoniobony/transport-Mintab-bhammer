@@ -23,7 +23,7 @@ export default function Network({ networkData }: { networkData: arbre[] }) {
   };
 
   const setNetworkData = (networkData: arbre[]) => {
-    const alphabet = ["A", "B", "C", "D"];
+    const alphabet = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
     const nodeList: nodeType[] = [];
     const edges: Edge[] = [];
 
