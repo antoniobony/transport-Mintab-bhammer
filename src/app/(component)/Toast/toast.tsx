@@ -1,12 +1,20 @@
-import { useEffect, useState } from 'react';
+import { NotfiContext } from '@/app/(context)/notif';
+import { useContext, useEffect, useState } from 'react';
 
 export const ToastNotification = ({ title, message }:{title:string,message:string}) => {
   const [isVisible, setIsVisible] = useState(false);
-
+  const {dispatchNotif} = useContext(NotfiContext)
+  
   useEffect(() => {
     if (title && message) {
       setIsVisible(true);
       const timer = setTimeout(() => {
+        dispatchNotif({
+          payload:{
+            title:"",
+            message:""
+          }
+        })
         setIsVisible(false);
       }, 5000);
       return () => clearTimeout(timer);
