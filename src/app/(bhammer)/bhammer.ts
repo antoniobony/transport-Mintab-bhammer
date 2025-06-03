@@ -131,14 +131,14 @@ const findMaxCout = (min:Min[],data:number[][],verification:verify[]):{max:Min,m
                 for(let j=0;j<data.length;j++){  
                     if(minCout.val > data[j][i] && !verification.some(v => v.column === i && v.row === j)){
                         minCout.x = j;
+                        minCout.val = Math.min(minCout.val,data[j][i]);
                     }
-                    minCout.val = Math.min(minCout.val,data[j][i]);
                 } 
             }
         }
     }
 
-
+    console.log(max,minCout);
     return {max,minCout}
 }
 
