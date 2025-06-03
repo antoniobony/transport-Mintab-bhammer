@@ -414,8 +414,14 @@ export default function Ro(){
             } catch (error) {
     
                 if (error instanceof RangeError) {
-                    console.error("Stack overflow prevented"); 
-                    alert("ERROR")
+                    dispatchNotif({
+                        payload:{
+                            title:"Solution optimale",
+                            message:"Il n'y a plus de solution"
+                        }
+                    });
+                    setNewGainState(undefined);
+                    console.log("Stack overflow prevented"); 
                 }
             }
         };
@@ -473,6 +479,7 @@ export default function Ro(){
                         message:"Il n'y a plus de solution"
                     }
                 });
+                setNewGainState(undefined)
             }
         } 
 
